@@ -1,0 +1,10 @@
+version: 1.2
+workflows:
+   - name: "peak_gene_predictor"
+     subclass: WDL
+     primaryDescriptorPath: /peak_gene_predictor/peak_gene_predictor.wdl
+     filters:
+        branches:
+          - main
+        tags:
+          - /.*/
