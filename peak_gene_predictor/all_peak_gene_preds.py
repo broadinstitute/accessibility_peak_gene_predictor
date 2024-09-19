@@ -103,10 +103,17 @@ def run_full_lr(high_pips, low_pips, annotation_cols, var_annots_to_pred):
                                                  all_peak_probs.set_index(["peak_name", "phenotype_id"])],
                                                  axis=1)
 
+    try:
+        betas_df
+    except NameError:
+        betas_df = pd.DataFrame(
+                data={"betas": regr.coef_[0], "feature": chr_annots.columns}
+            )
+
     return all_annots_with_predictions, betas_df, prob_dfs, regr
 
 
-    def make_enrichment_plot(annots_with_pred_bin, annotations):
+def make_enrichment_plot(annots_with_pred_bin, annotations):
     bins = [0, 0.01, 0.1, 0.5, 0.9, 1]
     labels = ["PIP<0.01", "0.01<PIP<0.1", "0.1<PIP<0.5", "0.5<PIP<0.9", "0.9<PIP"]
     annots_with_pred_bin["pip_bin"] = pd.cut(
@@ -199,21 +206,23 @@ def add_q_bins(all_annots_with_predictions):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", dest="peak_gene_dfs", nargs='+', default=[])
-    parser.add_argument("-r", dest="remove_columns", nargs='+', default=[])
     parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[])
-    parser.add_arguments("-c", dest="column_peaks", type=str, required=True)
+    parser.add_argument("-c", dest="column_peaks", type=str, required=True)
+    parser.add_argument("-v",dest="vars_in_peaks",
+        help="parquet with vars in peaks annotations",
+        type=str, required=True,
+    )
     args = parser.parse_args()
+
+    vars_in_peaks = pd.read_parquet(args.vars_in_peaks)
 
     fm_list = []
     for file_path in args.peak_gene_dfs:
         fm_list.append(pd.read_parquet(file_path))
 
-    peak_gene_df = pd.concat(fm_list)
-    if args.column_peaks in peak_gene_df.columns:
-        peak_gene_df.drop(columns=[args.column_peaks], inplace=True)
-
-    peaks_to_keep = ~peak_gene_df[args.remove_cols].any(axis=1)
-    peak_gene_df_filt = peak_gene_df.loc[peaks_to_keep]
+    peak_gene_df_filt = pd.concat(fm_list)
+    if args.column_peaks in peak_gene_df_filt.columns:
+        peak_gene_df_filt.drop(columns=[args.column_peaks], inplace=True)
 
     # NEW BOUNDARIES
     high_pips = peak_gene_df_filt.query("max_pip >= 0.5")
@@ -223,7 +232,7 @@ def main():
 
     print("Now running the train test split to get accuracy")
 
-    annotation_cols = args.annotation_columns
+    annotation_cols = np.hstack(('mean_start_distance', args.annotation_columns))
     high_pip_pos = high_pips.loc[:, annotation_cols].fillna(0)
     low_pips_neg = low_pips.loc[:, annotation_cols].fillna(0)
 
@@ -276,7 +285,7 @@ def main():
     betas_df.to_parquet(f'peak_betas.parquet')
 
     print("Making enrichment plot")
-    mean_arr, FE, fig = make_enrichment_plot(all_annots_with_predictions, annotations)
+    mean_arr, FE, fig = make_enrichment_plot(all_annots_with_predictions, annotation_cols)
 
     print('Done.')
 
