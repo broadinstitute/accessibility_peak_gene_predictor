@@ -16,7 +16,7 @@ def main():
     parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[])
     args = parser.parse_args()
 
-    groups = make_tuple(args.groupings)
+    groups = make_tuple(args.groupings[0])
     annotation_columns = args.annotation_columns
     vars_in_peaks = pd.read_parquet(vars_in_peaks)
     vars_in_peaks.set_index(["phenotype_id", "peak_name"], inplace=True)

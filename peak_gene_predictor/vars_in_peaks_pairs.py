@@ -50,16 +50,20 @@ def main():
     peak_gene_groups = vars_in_peaks.groupby(["phenotype_id", "peak_name"]).groups.keys()
 
     # choose scatter size based on number of peak-gene pairs
+    # whatever bad syntax lol, just want whole nums in a spec way and not 0
     if len(peak_gene_groups) > 1e6:
         size = 1000
+    elif len(peak_gene_groups) < 10000:
+        size = 10
     elif len(peak_gene_groups) < 1000:
         size = 1
     else:
         size = 100
 
-    with open('group_file.txt', 'w') as f:
-        for item in chunks(peak_gene_groups, len(peak_gene_groups)//size):
-            f.write(f'{item}\n')
+    items = chunks(peak_gene_groups, len(peak_gene_groups)//size)
+    for i in range(size):
+        with open(f'group_file_{i}.txt', 'w') as f:
+            f.write(f'{next(items)}')
 
 
 if __name__ == '__main__':

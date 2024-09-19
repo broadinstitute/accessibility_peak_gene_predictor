@@ -20,7 +20,7 @@ workflow peak_gene_predictor {
         call build_peak_gene_df {
             input:
                 vars_in_peaks=gather_variants_in_peaks_groups.vars_in_peaks,
-                groups = groups,
+                groups = read_lines(groups)[0],
                 prediction_categories=prediction_categories,
                 git_branch=git_branch
         }
@@ -62,7 +62,7 @@ task gather_variants_in_peaks_groups {
 
     output {
         File vars_in_peaks = "vars_in_peaks.parquet"
-        Array[String] groups_list = read_lines("group_file.txt")
+        Array[File] groups_list = glob("group_file_*.txt")
     }
 
     runtime {
@@ -84,7 +84,7 @@ task build_peak_gene_df {
     command {
         set -ex
         (git clone https://github.com/broadinstitute/accessibility_peak_gene_predictor.git /app ; cd /app ; git checkout ${git_branch})
-        micromamba run -n tools2 python3 /app/peak_gene_predictor/build_peak_gene_df.py -v ${vars_in_peaks} -g ${groups} -a ${prediction_categories}
+        micromamba run -n tools2 python3 /app/peak_gene_predictor/build_peak_gene_df.py -v ${vars_in_peaks} -g ${groups} -a ${sep=' ' prediction_categories}
     }
 
     output {
@@ -113,7 +113,7 @@ task gather_peak_genes_and_run_model {
     command {
         set -ex
         (git clone https://github.com/broadinstitute/accessibility_peak_gene_predictor.git /app ; cd /app ; git checkout ${git_branch})
-        micromamba run -n tools2 python3 /app/peak_gene_predictor/all_peak_gene_preds.py -p ${peak_gene_dfs} -r ${remove_categories} -a ${prediction_categories} -c ${peak_column}
+        micromamba run -n tools2 python3 /app/peak_gene_predictor/all_peak_gene_preds.py -p ${sep=' ' peak_gene_dfs} -r ${sep=' ' remove_categories} -a ${sep=' ' prediction_categories} -c ${peak_column}
     }
 
     output {
