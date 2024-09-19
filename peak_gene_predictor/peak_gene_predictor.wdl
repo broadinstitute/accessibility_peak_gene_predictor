@@ -20,7 +20,7 @@ workflow peak_gene_predictor {
         call build_peak_gene_df {
             input:
                 vars_in_peaks=gather_variants_in_peaks_groups.vars_in_peaks,
-                groups = read_lines(groups)[0],
+                groups = groups,
                 prediction_categories=prediction_categories,
                 git_branch=git_branch
         }
@@ -76,7 +76,7 @@ task gather_variants_in_peaks_groups {
 task build_peak_gene_df {
     input {
         File vars_in_peaks
-        String groups
+        File groups
         Array[String] prediction_categories
         String git_branch = "main"
     }

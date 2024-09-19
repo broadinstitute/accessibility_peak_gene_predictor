@@ -10,13 +10,15 @@ def main():
         help="parquet with vars in peaks annotations",
         type=str, required=True,
     )
-    parser.add_argument("-g", dest='groupings',
-        help="string of peak-gene groups",
+    parser.add_argument("-g", dest='group_file',
+        help="file containing peak-gene groups",
         type=str, required=True)
     parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[])
     args = parser.parse_args()
 
-    groups = make_tuple(args.groupings[0])
+    group_file = open(args.group_file, 'r')
+    Lines = group_file.readlines()
+    groups = make_tuple(Lines[0])
     annotation_columns = args.annotation_columns
     vars_in_peaks = pd.read_parquet(vars_in_peaks)
     vars_in_peaks.set_index(["phenotype_id", "peak_name"], inplace=True)
