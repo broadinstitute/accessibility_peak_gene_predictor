@@ -4,7 +4,7 @@ workflow peak_gene_predictor {
     input {
         File eQTL_annotations_file
         String peak_column
-        Array[String] prediction_categories
+        Array[String] prediction_categories # dont need to include start distance in this, it's automatic.
         Array[String] remove_categories
         String git_branch = "main"
     }
