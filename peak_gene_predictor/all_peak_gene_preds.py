@@ -281,7 +281,7 @@ def main():
     betas_df.to_parquet(f'peak_betas.parquet')
 
     print("Making enrichment plot")
-    all_plot_annots = np.hstack((annotation_cols all_annots_with_predictions.q_bins.cat.categories))
+    all_plot_annots = np.hstack((annotation_cols, all_annots_with_predictions.q_bins.cat.categories))
     mean_arr, FE, fig = make_enrichment_plot(all_annots_with_predictions, all_plot_annots)
 
     print('Done.')
