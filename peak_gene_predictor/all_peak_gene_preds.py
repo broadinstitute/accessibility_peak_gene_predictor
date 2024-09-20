@@ -174,10 +174,6 @@ def make_enrichment_plot(annots_with_pred_bin, annotations):
     for loc in np.arange(0, 16, 2.5):
         ax.axhline(loc, c="k", ls="--", lw=0.35, zorder=0)
 
-    for i, label in enumerate(labels):
-        ax.bar_label(ax.containers[i], labels=tot_melt.query('variable==@label').value.astype(int),
-                        fontsize=13, rotation=90, label_type='center', c='white')
-
     # clip axis
     ax.set_ylim(0, 8)
     fig.tight_layout()
