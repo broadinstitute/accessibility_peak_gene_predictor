@@ -225,6 +225,19 @@ def main():
     low_pips = peak_gene_df_filt.query("max_pip <= 0.01")
     print("high pip shape: ", high_pips.shape, "low pip shape: ", low_pips.shape)
     print("filtered peak gene df shape: ", peak_gene_df_filt.shape)
+    # reshape if necessary
+    high_thresh = 0.4
+    while (high_thresh >= 0.1) & (high_pips.shape[0] <= 10):
+        print('Need more high pips for training data. Re-sizing')
+        high_pips = peak_gene_df_filt.query(f"max_pip >= {high_thresh}")
+        print(f'High threshold = {high_thresh}, size = {high_pips.shape}')
+        high_thresh -= .1
+    low_thresh = 0.02
+    while (low_thresh <= 0.1) & (low_pips.shape[0] <= 10):
+        print('Need more low pips for training data. Re-sizing')
+        low_pips = peak_gene_df_filt.query(f"max_pip <= {low_thresh}")
+        print(f'Low threshold = {low_thresh}, size = {low_pips.shape}')
+        high_thresh += .01
 
     print("Now running the train test split to get accuracy")
 
