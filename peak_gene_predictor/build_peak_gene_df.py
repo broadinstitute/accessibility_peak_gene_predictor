@@ -15,6 +15,7 @@ def main():
         type=str, required=True)
     parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[])
     parser.add_argument("-r", dest="remove_columns", nargs='+', default=[])
+    parser.add_argument("-n", dest="numeric_columns", nargs='+', default=[])
     args = parser.parse_args()
 
     group_file = open(args.group_file, 'r')
@@ -23,7 +24,8 @@ def main():
 
     annotation_columns = args.annotation_columns
     remove_columns = args.remove_columns
-    # first, we collect annotations in ALL of the column types
+    numeric_columns = args.numeric_columns
+    # first, we collect annotations in ALL of the 0/1 column types. numeric - these are calculated differently
     annotation_columns = np.hstack((annotation_columns, remove_columns))
 
     # read in the var data
@@ -32,13 +34,16 @@ def main():
     vars_in_peaks.sort_index(inplace=True)
 
     # build a df
+    # include numeric columns in the dataframe
     peak_gene_df = pd.DataFrame(
         index=pd.MultiIndex.from_tuples(groups, names=('phenotype_id', 'peak_name')),
-        columns=np.hstack(("max_pip", "mean_start_distance", annotation_columns)),
+        columns=np.hstack(("max_pip", "mean_start_distance", annotation_columns, numeric_columns)),
     )
     for group in groups:
         temp_df = vars_in_peaks.loc[group]
         peak_gene_df.loc[group, annotation_columns] = (temp_df.loc[:, annotation_columns].any().astype(int))
+        # max and mean for numeric cols should be the same if its E2G cols - others, take note that we take MAX value per group here.
+        peak_gene_df.loc[group, numeric_columns] = temp_df.loc[:, numeric_columns].max()
         peak_gene_df.loc[group, "mean_start_distance"] = temp_df.start_distance.mean()
         peak_gene_df.loc[group, "max_pip"] = temp_df.pip.max()
         peak_gene_df.loc[group, "chr"] = temp_df.chr.iloc[0]
