@@ -113,7 +113,7 @@ def run_full_lr(high_pips, low_pips, annotation_cols, var_annots_to_pred):
     return all_annots_with_predictions, betas_df, prob_dfs, regr
 
 
-def make_enrichment_plot(annots_with_pred_bin, annotations, numeric_columns):
+def make_enrichment_plot(annots_with_pred_bin, annotations, numeric_columns=None):
     bins = [0, 0.01, 0.1, 0.5, 0.9, 1]
     labels = ["PIP<0.01", "0.01<PIP<0.1", "0.1<PIP<0.5", "0.5<PIP<0.9", "0.9<PIP"]
     annots_with_pred_bin["pip_bin"] = pd.cut(
@@ -137,7 +137,7 @@ def make_enrichment_plot(annots_with_pred_bin, annotations, numeric_columns):
                     .mean()
                 )
                 continue
-            elif conseq in numeric_columns:
+            elif numeric_columns is not None and conseq in numeric_columns:
                 mean_arr.at[conseq, label] = (
                     annots_with_pred_bin.query("pip_bin==@label")
                     .groupby(["phenotype_id"], as_index=True)[conseq]
@@ -212,7 +212,7 @@ def main():
     parser.add_argument("-p", dest="peak_gene_dfs", nargs='+', default=[])
     parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[],
         help="binary annotation columns to use in predictions")
-    parser.add_argument("-n", dest="numeric_columns", nargs='+', default=[],
+    parser.add_argument("-n", dest="numeric_columns", nargs='*', default=[],
         help="numeric annotation columns to use in predictions (treated differently)")
     parser.add_argument("-c", dest="column_peaks", type=str, required=True)
     parser.add_argument("-v",dest="vars_in_peaks",
@@ -252,7 +252,10 @@ def main():
 
     print("Now running the train test split to get accuracy")
 
-    annotation_cols = np.hstack(('mean_start_distance', args.annotation_columns, args.numeric_columns))
+    if args.numeric_columns is not None:
+        annotation_cols = np.hstack(('mean_start_distance', args.annotation_columns, args.numeric_columns))
+    else:
+        annotation_cols = np.hstack(('mean_start_distance', args.annotation_columns))
     high_pip_pos = high_pips.loc[:, annotation_cols].fillna(0)
     low_pips_neg = low_pips.loc[:, annotation_cols].fillna(0)
 
