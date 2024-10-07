@@ -7,6 +7,7 @@ workflow peak_gene_predictor {
         Array[String] prediction_categories # dont need to include start distance in this, it's automatic.
         Array[String] remove_categories
         Array[String] numeric_categories # if we have prediction categories that are not 0/1 but rather numeric (e.g. E2G #enhancers), include them here. Max value per peak-gene will be taken.
+        Int distance_threshold = 250 # min distance allowed between var and start site
         String git_branch = "main"
     }
 
@@ -14,6 +15,7 @@ workflow peak_gene_predictor {
         input:
             eQTL_annotations_file=eQTL_annotations_file,
             peak_column=peak_column,
+            distance_threshold = distance_threshold,
             git_branch=git_branch
     }
 
@@ -55,13 +57,14 @@ task gather_variants_in_peaks_groups {
     input {
         File eQTL_annotations_file
         String peak_column
+        Int distance_threshold
         String git_branch = "main"
     }
 
     command {
         set -ex
         (git clone https://github.com/broadinstitute/accessibility_peak_gene_predictor.git /app ; cd /app ; git checkout ${git_branch})
-        micromamba run -n tools2 python3 /app/peak_gene_predictor/vars_in_peaks_pairs.py -f ${eQTL_annotations_file} -p ${peak_column}
+        micromamba run -n tools2 python3 /app/peak_gene_predictor/vars_in_peaks_pairs.py -f ${eQTL_annotations_file} -p ${peak_column} -n ${distance_threshold}
     }
 
     output {

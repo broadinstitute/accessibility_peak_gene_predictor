@@ -18,6 +18,8 @@ def main():
     parser.add_argument("-p", dest="peak_column",
         help='name of column to define peaks',
         type=str, required=True)
+    parser.add_argument("-d", dest="distance_threshold", type=int,
+        required=True, help="minimum distance allowed between variants and gene in bases")
 
     args = parser.parse_args()
 
