@@ -52,6 +52,9 @@ def main():
     peaks_to_keep = ~peak_gene_df[args.remove_columns].any(axis=1)
     peak_gene_df_filt = peak_gene_df.loc[peaks_to_keep]
 
+    # print out which columns are resulting in most dropped
+    print(peak_gene_df[args.remove_columns].sum(axis=1))
+
     fname = args.group_file
     name = fname.split('/')[-1].split('.')[0].split('_')[-1]
     peak_gene_df_filt.to_parquet(f'{name}_peak_gene_df.parquet')
