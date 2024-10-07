@@ -64,7 +64,7 @@ task gather_variants_in_peaks_groups {
     command {
         set -ex
         (git clone https://github.com/broadinstitute/accessibility_peak_gene_predictor.git /app ; cd /app ; git checkout ${git_branch})
-        micromamba run -n tools2 python3 /app/peak_gene_predictor/vars_in_peaks_pairs.py -f ${eQTL_annotations_file} -p ${peak_column} -n ${distance_threshold}
+        micromamba run -n tools2 python3 /app/peak_gene_predictor/vars_in_peaks_pairs.py -f ${eQTL_annotations_file} -p ${peak_column} -d ${distance_threshold}
     }
 
     output {
