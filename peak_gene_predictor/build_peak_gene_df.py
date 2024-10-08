@@ -15,7 +15,7 @@ def main():
         type=str, required=True)
     parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[])
     parser.add_argument("-r", dest="remove_columns", nargs='+', default=[])
-    parser.add_argument("-n", dest="numeric_columns", nargs='*', default=[], required=False)
+    parser.add_argument("--n", dest="numeric_columns", nargs='*', default=[], required=False)
     args = parser.parse_args()
 
     group_file = open(args.group_file, 'r')

@@ -89,12 +89,13 @@ task build_peak_gene_df {
         Array[String]? numeric_categories
         String git_branch = "main"
     }
+    String numeric_pre = if defined(numeric_categories) then "--n " else ""
 
     command {
         set -ex
         (git clone https://github.com/broadinstitute/accessibility_peak_gene_predictor.git /app ; cd /app ; git checkout ${git_branch})
         micromamba run -n tools2 python3 /app/peak_gene_predictor/build_peak_gene_df.py -v ${vars_in_peaks} -g ${groups} -a ${sep=' ' prediction_categories} -r ${sep=' ' remove_categories} \
-            ${"-n " + sep=' ' numeric_categories}
+            ${numeric_pre}${sep=' ' numeric_categories}
     }
 
     output {
@@ -120,12 +121,14 @@ task gather_peak_genes_and_run_model {
     }
 
     Int disk_size = ceil(files_size)
+    String numeric_pre = if defined(numeric_categories) then "--n " else ""
+
 
     command {
         set -ex
         (git clone https://github.com/broadinstitute/accessibility_peak_gene_predictor.git /app ; cd /app ; git checkout ${git_branch})
         micromamba run -n tools2 python3 /app/peak_gene_predictor/all_peak_gene_preds.py -p ${sep=' ' peak_gene_dfs} -a ${sep=' ' prediction_categories} -c ${peak_column} -v ${vars_in_peaks} \
-            ${"-n " + sep=' ' numeric_categories}
+            ${numeric_pre}${sep=' ' numeric_categories}
     }
 
     output {

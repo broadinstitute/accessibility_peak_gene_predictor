@@ -212,7 +212,7 @@ def main():
     parser.add_argument("-p", dest="peak_gene_dfs", nargs='+', default=[])
     parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[],
         help="binary annotation columns to use in predictions")
-    parser.add_argument("-n", dest="numeric_columns", nargs='*', default=[],
+    parser.add_argument("--n", dest="numeric_columns", nargs='*', default=[],
         help="numeric annotation columns to use in predictions (treated differently)")
     parser.add_argument("-c", dest="column_peaks", type=str, required=True)
     parser.add_argument("-v",dest="vars_in_peaks",
