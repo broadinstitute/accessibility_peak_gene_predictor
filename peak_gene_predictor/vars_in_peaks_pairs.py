@@ -30,7 +30,7 @@ def main():
     peak_column = args.peak_column
 
     # remove vars close to tss site
-    var_annots_far = fm_annots_parq[fm_annots_parq.start_distance > 250]
+    var_annots_far = fm_annots_parq[fm_annots_parq.start_distance > args.distance_threshold]
     print(
         "number variants dropped due to start distance: ",
         fm_annots_parq.shape[0] - var_annots_far.shape[0],
