@@ -55,6 +55,7 @@ def main():
 
     # choose scatter size based on number of peak-gene pairs
     # whatever bad syntax lol, just want whole nums in a spec way and not 0
+    print('Number of unique gene-peak groups: ', len(peak_gene_groups))
     if len(peak_gene_groups) > 1e6:
         size = 1000
     elif len(peak_gene_groups) < 10000:

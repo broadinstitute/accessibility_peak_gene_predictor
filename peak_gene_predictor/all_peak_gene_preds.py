@@ -8,6 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import precision_recall_curve, PrecisionRecallDisplay
 from sklearn import metrics
 import os.path
+import pickle
 
 """
 All helper functions for running the model and plotting the results.
