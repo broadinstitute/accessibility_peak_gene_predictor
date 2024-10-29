@@ -4,7 +4,7 @@ workflow peak_gene_predictor {
     input {
         File eQTL_annotations_file
         String peak_column
-        Array[String] prediction_categories # dont need to include start distance in this, it's automatic.
+        Array[String]? prediction_categories # dont need to include start distance in this, it's automatic.
         Array[String]? remove_categories
         Array[String]? numeric_categories # if we have prediction categories that are not 0/1 but rather numeric (e.g. E2G #enhancers), include them here. Max value per peak-gene will be taken.
         Int distance_threshold = 250 # min distance allowed between var and start site
@@ -50,6 +50,7 @@ workflow peak_gene_predictor {
         File model_peak_prediction = gather_peak_genes_and_run_model.model_peak_prediction
         File mean_array_by_pip = gather_peak_genes_and_run_model.mean_array_by_pip
         File total_array_by_pip = gather_peak_genes_and_run_model.total_array_by_pip
+        File regr_model = gather_peak_genes_and_run_model.regr_model
     }
 }
 
@@ -84,18 +85,21 @@ task build_peak_gene_df {
     input {
         File vars_in_peaks
         File groups
-        Array[String] prediction_categories
+        Array[String]? prediction_categories
         Array[String]? remove_categories
         Array[String]? numeric_categories
         String git_branch = "main"
     }
     String numeric_pre = if defined(numeric_categories) then "--n " else ""
     String remove_pre = if defined(remove_categories) then "--r " else ""
+    String annotation_pre = if defined(prediction_categories) then "--a " else ""
 
     command {
         set -ex
         (git clone https://github.com/broadinstitute/accessibility_peak_gene_predictor.git /app ; cd /app ; git checkout ${git_branch})
-        micromamba run -n tools2 python3 /app/peak_gene_predictor/build_peak_gene_df.py -v ${vars_in_peaks} -g ${groups} -a ${sep=' ' prediction_categories} ${remove_pre}${sep=' ' remove_categories} \
+        micromamba run -n tools2 python3 /app/peak_gene_predictor/build_peak_gene_df.py -v ${vars_in_peaks} -g ${groups} \
+            ${annotation_pre}${sep=' ' prediction_categories} \
+            ${remove_pre}${sep=' ' remove_categories} \
             ${numeric_pre}${sep=' ' numeric_categories}
     }
 
@@ -114,7 +118,7 @@ task gather_peak_genes_and_run_model {
     input {
         Array[String] peak_gene_dfs
         Float files_size
-        Array[String] prediction_categories
+        Array[String]? prediction_categories
         Array[String]? numeric_categories
         File vars_in_peaks
         String peak_column
@@ -123,12 +127,13 @@ task gather_peak_genes_and_run_model {
 
     Int disk_size = ceil(files_size)
     String numeric_pre = if defined(numeric_categories) then "--n " else ""
-
+    String annotation_pre = if defined(prediction_categories) then "--a " else ""
 
     command {
         set -ex
         (git clone https://github.com/broadinstitute/accessibility_peak_gene_predictor.git /app ; cd /app ; git checkout ${git_branch})
-        micromamba run -n tools2 python3 /app/peak_gene_predictor/all_peak_gene_preds.py -p ${sep=' ' peak_gene_dfs} -a ${sep=' ' prediction_categories} -c ${peak_column} -v ${vars_in_peaks} \
+        micromamba run -n tools2 python3 /app/peak_gene_predictor/all_peak_gene_preds.py -p ${sep=' ' peak_gene_dfs} \
+            ${annotation_pre}${sep=' ' prediction_categories} -c ${peak_column} -v ${vars_in_peaks} \
             ${numeric_pre}${sep=' ' numeric_categories}
     }
 
@@ -139,6 +144,7 @@ task gather_peak_genes_and_run_model {
         File model_peak_prediction = "peak_preds.parquet"
         File mean_array_by_pip = "mean_array_by_pip.tsv"
         File total_array_by_pip = "totals_array_by_pip.tsv"
+        File regr_model = "model.pkl"
     }
 
     runtime {

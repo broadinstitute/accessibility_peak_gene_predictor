@@ -111,6 +111,17 @@ def run_full_lr(high_pips, low_pips, annotation_cols, var_annots_to_pred):
                 data={"betas": regr.coef_[0], "feature": chr_annots.columns}
             )
 
+    # train a full model on all chr, to be used for other data set predictions
+    X_train = pd.concat([pos, neg])
+    y_train = np.array([1] * sum(pos == 1) + [0] * sum(neg == 1))
+    regr = LogisticRegression(
+        random_state=1, max_iter=1000, class_weight="balanced"
+    )
+    # train the predictor
+    regr.fit(X_train, y_train)
+    with open('model.pkl','wb') as f:
+        pickle.dump(regr,f)
+
     return all_annots_with_predictions, betas_df, prob_dfs, regr
 
 
@@ -211,7 +222,7 @@ def add_q_bins(all_annots_with_predictions):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", dest="peak_gene_dfs", nargs='+', default=[])
-    parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[],
+    parser.add_argument("--a", dest="annotation_columns", nargs='*', default=[],
         help="binary annotation columns to use in predictions")
     parser.add_argument("--n", dest="numeric_columns", nargs='*', default=[],
         help="numeric annotation columns to use in predictions (treated differently)")
@@ -254,10 +265,12 @@ def main():
 
     print("Now running the train test split to get accuracy")
 
+    if args.annotation_columns is None:
+        annotation_cols = []
     if args.numeric_columns is not None:
-        annotation_cols = np.hstack(('mean_start_distance', args.annotation_columns, args.numeric_columns))
+        annotation_cols = np.hstack(('mean_start_distance', annotation_cols, args.numeric_columns))
     else:
-        annotation_cols = np.hstack(('mean_start_distance', args.annotation_columns))
+        annotation_cols = np.hstack(('mean_start_distance', annotation_cols))
     high_pip_pos = high_pips.loc[:, annotation_cols].fillna(0)
     low_pips_neg = low_pips.loc[:, annotation_cols].fillna(0)
 

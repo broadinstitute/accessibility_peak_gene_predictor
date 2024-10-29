@@ -13,7 +13,7 @@ def main():
     parser.add_argument("-g", dest='group_file',
         help="file containing peak-gene groups",
         type=str, required=True)
-    parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[])
+    parser.add_argument("--a", dest="annotation_columns", nargs='*', default=[], required=False)
     parser.add_argument("--r", dest="remove_columns", nargs='*', default=[], required=False)
     parser.add_argument("--n", dest="numeric_columns", nargs='*', default=[], required=False)
     args = parser.parse_args()
@@ -22,7 +22,10 @@ def main():
     Lines = group_file.readlines()
     groups = make_tuple(Lines[0])
 
-    annotation_columns = args.annotation_columns
+    if args.annotation_columns is not None:
+        annotation_columns = args.annotation_columns
+    else:
+        annotation_columns = []
     # first, we collect annotations in ALL of the 0/1 column types. numeric - these are calculated differently
     if args.remove_columns is not None:
         remove_columns = args.remove_columns
@@ -36,21 +39,36 @@ def main():
     vars_in_peaks.set_index(["phenotype_id", "peak_name"], inplace=True)
     vars_in_peaks.sort_index(inplace=True)
 
-    # build a df
-    # include numeric columns in the dataframe
-    peak_gene_df = pd.DataFrame(
-        index=pd.MultiIndex.from_tuples(groups, names=('phenotype_id', 'peak_name')),
-        columns=np.hstack(("max_pip", "mean_start_distance", annotation_columns, numeric_columns)) if args.numeric_columns is not None else np.hstack(("max_pip", "mean_start_distance", annotation_columns)),
-    )
-    for group in groups:
-        temp_df = vars_in_peaks.loc[group]
-        peak_gene_df.loc[group, annotation_columns] = (temp_df.loc[:, annotation_columns].any().astype(int))
-        # max and mean for numeric cols should be the same if its E2G cols - others, take note that we take MAX value per group here.
-        if args.numeric_columns is not None:
-            peak_gene_df.loc[group, numeric_columns] = temp_df.loc[:, numeric_columns].max()
-        peak_gene_df.loc[group, "mean_start_distance"] = temp_df.start_distance.mean()
-        peak_gene_df.loc[group, "max_pip"] = temp_df.pip.max()
-        peak_gene_df.loc[group, "chr"] = temp_df.chr.iloc[0]
+    base_columns = ['max_pip', 'mean_start_distance']
+    if len(annotation_columns) > 0:
+        # build a df
+        # include numeric columns in the dataframe
+        peak_gene_df = pd.DataFrame(
+            index=pd.MultiIndex.from_tuples(groups, names=('phenotype_id', 'peak_name')),
+            columns=np.hstack((base_columns, annotation_columns, numeric_columns)) if args.numeric_columns is not None else np.hstack((base_columns, annotation_columns)),
+        )
+        for group in groups:
+            temp_df = vars_in_peaks.loc[group]
+            peak_gene_df.loc[group, annotation_columns] = (temp_df.loc[:, annotation_columns].any().astype(int))
+            # max and mean for numeric cols should be the same if its E2G cols - others, take note that we take MAX value per group here.
+            if args.numeric_columns is not None:
+                peak_gene_df.loc[group, numeric_columns] = temp_df.loc[:, numeric_columns].max()
+            peak_gene_df.loc[group, "mean_start_distance"] = temp_df.start_distance.mean()
+            peak_gene_df.loc[group, "max_pip"] = temp_df.pip.max()
+            peak_gene_df.loc[group, "chr"] = temp_df.chr.iloc[0]
+    else: # we are just predicting based on mean start distance and any numeric columns
+        # this is so ugly but i need a quick solution.
+        peak_gene_df = pd.DataFrame(
+            index=pd.MultiIndex.from_tuples(groups, names=('phenotype_id', 'peak_name')),
+            columns=np.hstack((base_columns, numeric_columns)) if args.numeric_columns is not None else base_columns,
+        )
+        for group in groups:
+            temp_df = vars_in_peaks.loc[group]
+            if args.numeric_columns is not None:
+                peak_gene_df.loc[group, numeric_columns] = temp_df.loc[:, numeric_columns].max()
+            peak_gene_df.loc[group, "mean_start_distance"] = temp_df.start_distance.mean()
+            peak_gene_df.loc[group, "max_pip"] = temp_df.pip.max()
+            peak_gene_df.loc[group, "chr"] = temp_df.chr.iloc[0]
 
     # now, remove any peaks that have an annotation in any of our remove categories
     if args.remove_columns is not None:
