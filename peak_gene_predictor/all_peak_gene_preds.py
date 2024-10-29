@@ -110,10 +110,10 @@ def run_full_lr(high_pips, low_pips, annotation_cols, var_annots_to_pred):
         betas_df = pd.DataFrame(
                 data={"betas": regr.coef_[0], "feature": chr_annots.columns}
             )
-
+    print(pos, neg)
     # train a full model on all chr, to be used for other data set predictions
     X_train = pd.concat([pos, neg])
-    y_train = np.array([1] * sum(pos == 1) + [0] * sum(neg == 1))
+    y_train = np.array([1] * len(pos) + [0] * len(neg))
     regr = LogisticRegression(
         random_state=1, max_iter=1000, class_weight="balanced"
     )
