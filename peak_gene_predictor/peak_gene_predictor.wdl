@@ -5,7 +5,7 @@ workflow peak_gene_predictor {
         File eQTL_annotations_file
         String peak_column
         Array[String] prediction_categories # dont need to include start distance in this, it's automatic.
-        Array[String] remove_categories
+        Array[String]? remove_categories
         Array[String]? numeric_categories # if we have prediction categories that are not 0/1 but rather numeric (e.g. E2G #enhancers), include them here. Max value per peak-gene will be taken.
         Int distance_threshold = 250 # min distance allowed between var and start site
         String git_branch = "main"
@@ -85,16 +85,17 @@ task build_peak_gene_df {
         File vars_in_peaks
         File groups
         Array[String] prediction_categories
-        Array[String] remove_categories
+        Array[String]? remove_categories
         Array[String]? numeric_categories
         String git_branch = "main"
     }
     String numeric_pre = if defined(numeric_categories) then "--n " else ""
+    String remove_pre = if defined(remove_categories) then "--r " else ""
 
     command {
         set -ex
         (git clone https://github.com/broadinstitute/accessibility_peak_gene_predictor.git /app ; cd /app ; git checkout ${git_branch})
-        micromamba run -n tools2 python3 /app/peak_gene_predictor/build_peak_gene_df.py -v ${vars_in_peaks} -g ${groups} -a ${sep=' ' prediction_categories} -r ${sep=' ' remove_categories} \
+        micromamba run -n tools2 python3 /app/peak_gene_predictor/build_peak_gene_df.py -v ${vars_in_peaks} -g ${groups} -a ${sep=' ' prediction_categories} ${remove_pre}${sep=' ' remove_categories} \
             ${numeric_pre}${sep=' ' numeric_categories}
     }
 

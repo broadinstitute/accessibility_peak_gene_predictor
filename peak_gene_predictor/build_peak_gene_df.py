@@ -14,7 +14,7 @@ def main():
         help="file containing peak-gene groups",
         type=str, required=True)
     parser.add_argument("-a", dest="annotation_columns", nargs='+', default=[])
-    parser.add_argument("-r", dest="remove_columns", nargs='+', default=[])
+    parser.add_argument("--r", dest="remove_columns", nargs='+', default=[], required=False)
     parser.add_argument("--n", dest="numeric_columns", nargs='*', default=[], required=False)
     args = parser.parse_args()
 
@@ -23,12 +23,13 @@ def main():
     groups = make_tuple(Lines[0])
 
     annotation_columns = args.annotation_columns
-    remove_columns = args.remove_columns
+    # first, we collect annotations in ALL of the 0/1 column types. numeric - these are calculated differently
+    if args.remove_columns is not None:
+        remove_columns = args.remove_columns
+        annotation_columns = np.hstack((annotation_columns, remove_columns))
+
     if args.numeric_columns is not None:
         numeric_columns = args.numeric_columns
-
-    # first, we collect annotations in ALL of the 0/1 column types. numeric - these are calculated differently
-    annotation_columns = np.hstack((annotation_columns, remove_columns))
 
     # read in the var data
     vars_in_peaks = pd.read_parquet(args.vars_in_peaks)
@@ -52,11 +53,13 @@ def main():
         peak_gene_df.loc[group, "chr"] = temp_df.chr.iloc[0]
 
     # now, remove any peaks that have an annotation in any of our remove categories
-    peaks_to_keep = ~peak_gene_df[args.remove_columns].any(axis=1)
-    peak_gene_df_filt = peak_gene_df.loc[peaks_to_keep]
-
-    # print out which columns are resulting in most dropped
-    print(peak_gene_df[args.remove_columns].sum(axis=1))
+    if args.remove_columns is not None:
+        peaks_to_keep = ~peak_gene_df[args.remove_columns].any(axis=1)
+        peak_gene_df_filt = peak_gene_df.loc[peaks_to_keep]
+        # print out which columns are resulting in most dropped
+        print(peak_gene_df[args.remove_columns].sum(axis=1))
+    else:
+        peak_gene_df_filt = peak_gene_df.copy()
 
     fname = args.group_file
     name = fname.split('/')[-1].split('.')[0].split('_')[-1]
