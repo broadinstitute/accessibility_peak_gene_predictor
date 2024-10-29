@@ -267,6 +267,9 @@ def main():
 
     if args.annotation_columns is None:
         annotation_cols = []
+    else:
+        annotation_cols = args.annotation_columns
+
     if args.numeric_columns is not None:
         annotation_cols = np.hstack(('mean_start_distance', annotation_cols, args.numeric_columns))
     else:
