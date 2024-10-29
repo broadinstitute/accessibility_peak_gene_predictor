@@ -29,6 +29,8 @@ def main():
     fm_annots_parq.drop_duplicates(inplace=True)
     peak_column = args.peak_column
 
+    # need to ensure start distance is absolute values always moving forward
+    fm_annots_parq['start_distance'] = abs(fm_annots_parq['start_distance'])
     # remove vars close to tss site
     var_annots_far = fm_annots_parq[abs(fm_annots_parq.start_distance) > args.distance_threshold]
     print(
