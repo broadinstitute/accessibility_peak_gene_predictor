@@ -231,6 +231,7 @@ def main():
     if args.column_peaks in peak_gene_df_filt.columns:
         peak_gene_df_filt.drop(columns=[args.column_peaks], inplace=True)
 
+    peak_gene_df_filt.to_parquet('combined_peak_gene_df.parquet')
     # NEW BOUNDARIES
     high_pips = peak_gene_df_filt.query("max_pip >= 0.5")
     low_pips = peak_gene_df_filt.query("max_pip <= 0.01")

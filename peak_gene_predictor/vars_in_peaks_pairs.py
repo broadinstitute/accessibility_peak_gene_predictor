@@ -30,7 +30,7 @@ def main():
     peak_column = args.peak_column
 
     # remove vars close to tss site
-    var_annots_far = fm_annots_parq[fm_annots_parq.start_distance > args.distance_threshold]
+    var_annots_far = fm_annots_parq[abs(fm_annots_parq.start_distance) > args.distance_threshold]
     print(
         "number variants dropped due to start distance: ",
         fm_annots_parq.shape[0] - var_annots_far.shape[0],
@@ -56,9 +56,9 @@ def main():
     if len(peak_gene_groups) > 1e6:
         size = 1000
     elif len(peak_gene_groups) < 10000:
-        size = 10
-    elif len(peak_gene_groups) < 1000:
         size = 1
+    elif len(peak_gene_groups) < 100000:
+        size = 10
     else:
         size = 100
 
