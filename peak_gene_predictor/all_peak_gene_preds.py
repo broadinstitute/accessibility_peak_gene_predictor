@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.pyplot import cm
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import precision_recall_curve, PrecisionRecallDisplay
+from sklearn.metrics import auc, precision_recall_curve, PrecisionRecallDisplay
 from sklearn import metrics
 import os.path
 import pickle
@@ -294,11 +294,12 @@ def main():
     fig, ax = plt.subplots(figsize=(10,8))
     pr_display = PrecisionRecallDisplay(precision=precision, recall=recall).plot(ax=ax)
     ax.set_ylim(0)
-    ax.set_title(f'Train/Test ROC Curve, High and Low Peaks', fontsize=30)
+    ax.set_title(f'Train/Test Precisions-Recall Curve, High and Low Peaks', fontsize=30)
+    auc_precision_recall = auc(recall, precision)
     fpr, tpr, thresholds = metrics.roc_curve(y_real, y_prob, pos_label=1)
-    ax.text(x=.8,y=.8, s=f'AUC: {round(metrics.auc(fpr, tpr), 3)}', fontsize=20)
-    fig.savefig(f'peak_predictor_roc.png', dpi=300)
-    print("AUC: ", metrics.auc(fpr, tpr))
+    ax.text(x=.8,y=.8, s=f'AUC: {round(auc_precision_recall, 3)}', fontsize=20)
+    fig.savefig(f'peak_predictor_prc.png', dpi=300)
+    print("ROC AUC: ", metrics.auc(fpr, tpr))
 
     # set up
     peak_gene_df_filt.reset_index(inplace=True)

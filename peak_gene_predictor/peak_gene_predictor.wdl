@@ -139,7 +139,7 @@ task gather_peak_genes_and_run_model {
 
     output {
         File peak_pip_plot = "peak_pip_enrichment_by_category.png"
-        File roc_curve = "peak_predictor_roc.png"
+        File roc_curve = "peak_predictor_prc.png"
         File model_beta_df = "peak_betas.parquet"
         File model_peak_prediction = "peak_preds.parquet"
         File mean_array_by_pip = "mean_array_by_pip.tsv"
